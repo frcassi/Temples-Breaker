@@ -4,23 +4,42 @@ using UnityEngine;
 
 public class BallMovementController : MonoBehaviour
 {
-    public float speed;
+    private float speed = 12.0f;
     public Vector3 direction;
     private Rigidbody ballRb;
 
+    private float speedIncrement = 0.2f;
+    private float speedIncreaseInterval = 10.0f;
+
+    // Maximum angular deviation from standard bounce angle when bouncing from paddle
+    // Deviation added proportionally to the distance between contact point and paddle center
     private float maxAngleDeviation = 0.8f;
+
+    // Lower bound of screen, after which ball gets destroyed and lost
+    private float lowerScreenBound = -30.0f;
+
+    // Minimum vertical speed the ball should keep to avoid getting stuck
+    private float zSpeedBound = 0.2f;
 
     // Start is called before the first frame update
     void Start()
     {
         ballRb = GetComponent<Rigidbody>();
         direction = Vector3.back;
+
+        StartCoroutine(IncreaseSpeed());
     }
 
     // Update is called once per frame
     void Update()
     {
         ballRb.velocity = direction * speed;
+
+        if(transform.position.z < lowerScreenBound)
+        {
+            Debug.Log("GAME OVER!");
+            Destroy(gameObject);
+        }
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -41,8 +60,6 @@ public class BallMovementController : MonoBehaviour
                 // distanceFromPaddleCenter:maxAngleDeviation = angleDeviation:maxAngleDeviation
                 float angleDeviation = distanceFromPaddleCenter * maxAngleDeviation / (paddleHorizontalLength / 2);
 
-                Debug.Log(angleDeviation);
-
                 direction.x += angleDeviation;
             } else
             {
@@ -50,9 +67,32 @@ public class BallMovementController : MonoBehaviour
                 Vector3 normalDirection = collision.GetContact(0).normal;
 
                 // Invert direction only along normal to the collison
-                direction += normalDirection * 2;
+                direction -= Vector3.Dot(direction, normalDirection) * normalDirection * 2;
+            }
+
+            // After bouncing, if the horizontal speed is too low increase it in order to avoid
+            // getting stuck bouncing horizontally
+            if (direction.z > -zSpeedBound && direction.z < zSpeedBound)
+            {
+                if(direction.z > 0)
+                {
+                    direction.z = zSpeedBound;
+                }
+                else
+                {
+                    direction.z = -zSpeedBound;
+                }
             }
         }
         direction = direction.normalized;
+    }
+
+    IEnumerator IncreaseSpeed()
+    {
+        while(true)
+        {
+            yield return new WaitForSeconds(speedIncreaseInterval);
+            speed += speedIncrement;
+        }
     }
 }

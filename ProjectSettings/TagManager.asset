@@ -6,11 +6,14 @@ TagManager:
   tags:
   - NoBounce
   - Paddle
+  - Block
+  - Collectible
+  - Ball
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Plane
   - Water
   - UI
   - 

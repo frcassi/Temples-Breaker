@@ -5,6 +5,8 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     public float speed = 10;
+
+    // Horizontal bound for player movement
     private float xBound = 21;
 
     // Start is called before the first frame update
